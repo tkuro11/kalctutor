@@ -1,7 +1,8 @@
+#!/usr/bin/env python
 # coding: utf-8
 import pygame, sys, random 
-from pygame.locals import *
 import datetime
+from pygame.locals import *
 
 BASICFONTSIZE = 70
 TEXTCOLOR = (100, 0, 20)
@@ -15,13 +16,17 @@ pygame.display.set_caption('calc practice')
 BASICFONT = pygame.font.Font('freesansbold.ttf', BASICFONTSIZE)
 JAPANESEFONT = pygame.font.Font('DroidSansJapanese.ttf', BASICFONTSIZE)
 
-good = pygame.mixer.Sound("./beep1.ogg")
-bad = pygame.mixer.Sound("./badswap.wav")
+good = pygame.mixer.Sound("./media/beep1.ogg")
+bad = pygame.mixer.Sound("./media/badswap.wav")
 
 # making problems
-range_a = (1, 10)
-range_b = (1, 10)
-n_of_problems = 50
+range_a = (1, 20)
+range_b = (1, 20)
+high_scores = []
+prev_score  = None
+prev_miss = 0
+prev_time = None
+n_of_problems = 30
 surface = pygame.Surface(DISPLAYSURF.get_size())
 
 def drawText(text, x, y, c, font = BASICFONT):
@@ -55,8 +60,12 @@ def drawScreen():
 
 def drawTitleScreen(): 
     surface.fill((10, 200, 20))
-    drawText(u"計算どりーる", 150, 200, SHADOWCOLOR, JAPANESEFONT)
-    drawText("HIT ANY KEY", 200, 400, SHADOWCOLOR)
+    drawText(u"計算どりーる", 150, 100, SHADOWCOLOR, JAPANESEFONT)
+    drawText("HIT ANY KEY", 200, 300, SHADOWCOLOR)
+    if prev_score:
+        drawText(u"前のスコア：", 20, 450, (100, 230, 130), JAPANESEFONT)
+        drawText("%d (miss %d)" % (prev_score, prev_miss), 400, 460, (100, 230, 130))
+        drawText("[%4d.%2d]" % (prev_time.seconds, prev_time.microseconds/10000), 400, 550, (100, 230, 130))
 
 def init_state():
     global probs, answers, tick_or_cross, inputs, current_prob, probs_str, start_time
@@ -88,7 +97,7 @@ while True:
                         if event.key == K_BACKSPACE:
                             ans /= 10
                         if event.key >= K_0 and event.key <= K_9:
-                            ans = ans * 10 +(event.key - K_0)
+                            ans = ans * 10 + (event.key - K_0)
                         if event.key == K_RETURN:
                             if ans == answers[current_prob]:
                                 tick_or_cross[current_prob] = True
@@ -98,6 +107,15 @@ while True:
                                 bad.play()
                             ans = 0
                             current_prob += 1
+                            if current_prob >= n_of_problems:
+                                cont = False
+                                prev_score = sum([1 for i in tick_or_cross if i])
+                                prev_miss  = sum([1 for i in tick_or_cross if not i])
+                                high_scores.append(prev_score)
+                                high_scores.sort()
+                                high_scores = high_scores[:3]
+                                prev_time = datetime.datetime.now() - start_time
+                                break
                         inputs[current_prob] = ans
 
                     if event.type == QUIT or event.type == KEYDOWN and event.key == K_ESCAPE:
