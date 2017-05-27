@@ -103,7 +103,9 @@ def mainGameHandler(event): # {{{
             ans /= 10
         if event.key >= K_0 and event.key <= K_9:
             ans = ans * 10 + (event.key - K_0)
-        if event.key == K_RETURN:
+        elif event.key >= 256 and event.key <= 256+9:
+            ans = ans * 10 + (event.key - 256)
+        if event.key == K_RETURN or event.key == 271:
             if ans == answers[current_prob]:
                 tick_or_cross[current_prob] = True
                 good.play()
